@@ -12,7 +12,8 @@ find_package(OpenGL REQUIRED)
 # GLUT
 find_package(GLUT REQUIRED)
 
-
+# Eigen
+find_package(Eigen3 REQUIRED)
 
 include_directories(inc)
 add_subdirectory(src)
