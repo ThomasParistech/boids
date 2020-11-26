@@ -4,9 +4,11 @@
  * 2020 Thomas Rouch                                                                                                 *
  *********************************************************************************************************************/
 
+#include <vector>
 #include <GL/glut.h>
 #include "camera_trackball.h"
 
+#include "boid.h"
 const float FOVY = 60.0f;
 const float NEARCLIP = 0.1f;
 const float FARCLIP = 100.0f;
@@ -24,43 +26,13 @@ int window_h = 600;
 // Camera
 CameraTrackball camera;
 
-void drawCube()
-{
-    glColor3f(1, 1, 1);
-    glLineWidth(2.0);
-    glBegin(GL_QUAD_STRIP);
-    glColor3f(1, 1, 1);
-    glNormal3f(0, 0, 1);
-    glVertex3f(-1, -1, 1);
-    glVertex3f(1, -1, 1);
-    glVertex3f(-1, 1, 1);
-    glVertex3f(1, 1, 1);
-    glNormal3f(0, 1, 0);
-    glVertex3f(-1, 1, -1);
-    glVertex3f(1, 1, -1);
-    glNormal3f(0, 0, -1);
-    glVertex3f(-1, -1, -1);
-    glVertex3f(1, -1, -1);
-    glNormal3f(0, -1, 0);
-    glVertex3f(-1, -1, 1);
-    glVertex3f(1, -1, 1);
-    glEnd();
+// Time management
+float t = 0;
+float last_t = 0;
+float dt = 0;
 
-    glBegin(GL_QUADS);
-    glNormal3f(1, 0, 0);
-    glVertex3f(1, 1, 1);
-    glVertex3f(1, -1, 1);
-    glVertex3f(1, -1, -1);
-    glVertex3f(1, 1, -1);
-    glEnd();
-    glBegin(GL_QUADS);
-    glNormal3f(-1, 0, 0);
-    glVertex3f(-1, 1, 1);
-    glVertex3f(-1, -1, 1);
-    glVertex3f(-1, -1, -1);
-    glVertex3f(-1, 1, -1);
-    glEnd();
-}
+
+std::vector<Boid> boids_;
 
 void init(void)
 {
@@ -77,6 +49,15 @@ void init(void)
 
     // Init camera
     camera.init({0.0f, 0.0f, 0.0f}, 10.0f);
+
+    for (int j = 0; j < 3; j++)
+    {
+        int scale = 10;
+        float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        boids_.emplace_back(scale * Vec3f(x, y, z), Vec3f(1, 0, 0));
+    }
 }
 
 void display()
@@ -86,7 +67,8 @@ void display()
     //Camera setup
     camera.lookAt();
 
-    drawCube();
+    for (const auto &boid : boids_)
+        boid.draw();
 
     glutSwapBuffers();
 }
@@ -101,6 +83,16 @@ void reshape(int w, int h)
 
 void processKeys(unsigned char key, int x, int y)
 {
+}
+
+void systemEvolution()
+{
+    last_t = t;
+    t = (float)glutGet(GLUT_ELAPSED_TIME);
+    dt = (t - last_t) * 0.001;
+
+    for (auto &boid : boids_)
+        boid.update(dt);
 }
 
 void mouseButton(int button, int state, int x, int y)
@@ -157,6 +149,7 @@ int main(int argc, char **argv)
     glutKeyboardFunc(processKeys);
     glutMotionFunc(mouseMotion);
 
+    glutIdleFunc(systemEvolution);
     glutTimerFunc(1000 / FPS, timer, 0);
 
     glutMainLoop();

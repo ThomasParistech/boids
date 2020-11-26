@@ -1,4 +1,5 @@
 set(COMMON_SOURCES ${COMMON_SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/boid.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/camera_trackball.cpp
     PARENT_SCOPE
 )
