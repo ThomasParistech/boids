@@ -50,13 +50,17 @@ void init(void)
     // Init camera
     camera.init({0.0f, 0.0f, 0.0f}, 10.0f);
 
-    for (int j = 0; j < 3; j++)
+    for (int j = 0; j < 30; j++)
     {
         int scale = 10;
         float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        boids_.emplace_back(scale * Vec3f(x, y, z), Vec3f(1, 0, 0));
+
+        float u = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float v = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float w = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        boids_.emplace_back(scale * Vec3f(x, y, z), Vec3f(u, v, w));
     }
 }
 
@@ -90,6 +94,11 @@ void systemEvolution()
     last_t = t;
     t = (float)glutGet(GLUT_ELAPSED_TIME);
     dt = (t - last_t) * 0.001;
+
+    for (auto &boid_1 : boids_)
+        for (auto &boid_2 : boids_)
+            if (boid_1.get_id() != boid_2.get_id())
+                boid_1.add_neighbor(boid_2);
 
     for (auto &boid : boids_)
         boid.update(dt);
