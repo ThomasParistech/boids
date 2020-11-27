@@ -7,6 +7,7 @@
 #include <GL/glut.h>
 
 #include "boid.h"
+#include "gl_utils.h"
 
 
 Boid::Boid(const Vec3f &position, const Vec3f &speed) : id_(next_id_++),
@@ -21,43 +22,6 @@ void Boid::update(float dt)
     position_ += speed_ * dt;
 }
 
-void drawCube()
-{
-    glColor3f(1, 1, 1);
-    glLineWidth(2.0);
-    glBegin(GL_QUAD_STRIP);
-    glColor3f(1, 1, 1);
-    glNormal3f(0, 0, 1);
-    glVertex3f(-1, -1, 1);
-    glVertex3f(1, -1, 1);
-    glVertex3f(-1, 1, 1);
-    glVertex3f(1, 1, 1);
-    glNormal3f(0, 1, 0);
-    glVertex3f(-1, 1, -1);
-    glVertex3f(1, 1, -1);
-    glNormal3f(0, 0, -1);
-    glVertex3f(-1, -1, -1);
-    glVertex3f(1, -1, -1);
-    glNormal3f(0, -1, 0);
-    glVertex3f(-1, -1, 1);
-    glVertex3f(1, -1, 1);
-    glEnd();
-
-    glBegin(GL_QUADS);
-    glNormal3f(1, 0, 0);
-    glVertex3f(1, 1, 1);
-    glVertex3f(1, -1, 1);
-    glVertex3f(1, -1, -1);
-    glVertex3f(1, 1, -1);
-    glEnd();
-    glBegin(GL_QUADS);
-    glNormal3f(-1, 0, 0);
-    glVertex3f(-1, 1, 1);
-    glVertex3f(-1, -1, 1);
-    glVertex3f(-1, -1, -1);
-    glVertex3f(-1, 1, -1);
-    glEnd();
-}
 
 void Boid::draw() const
 {
@@ -65,7 +29,15 @@ void Boid::draw() const
               << "Position: " << position_.transpose() << std::endl
               << "Speed   : " << speed_.transpose() << std::endl;
     glPushMatrix();
+
     glTranslatef(position_[0], position_[1], position_[2]);
-    drawCube();
+    GlUtils::align_view(speed_);
+    GlUtils::draw_box(Vec3f(0.6, 0.3, 0.3));
+
+    glTranslatef(-0.6, 0, 0);
+    GlUtils::draw_yz_plane(0.4, 0.4, Vec3f(0.0, 0.0, 1.0));
+
+    glTranslatef(1.2, 0, 0);
+    GlUtils::draw_pyramid(Vec3f(0.1, 0.1, 0.1), Vec3f(1.0, 1.0, 0.0));
     glPopMatrix();
 }
