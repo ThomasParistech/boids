@@ -76,7 +76,10 @@ void display()
     ImGui_ImplGLUT_NewFrame();
 
     ImGui::Begin("Test");
-    ImGui::Text("OK");
+    ImGui::SliderFloat("Separation", &Boid::separation_factor_, 0.0f, 0.1f);
+    ImGui::SliderFloat("Cohesion", &Boid::cohesion_factor_, 0.0f, 0.1f);
+    ImGui::SliderFloat("Alignment", &Boid::alignment_factor_, 0.0f, 0.1f);
+    ImGui::SliderFloat("Randomness", &Boid::randomness_, 0.0f, 0.1f);
     ImGui::End();
 
     //Camera setup
@@ -124,6 +127,9 @@ void systemEvolution()
 void mouseButton(int button, int state, int x, int y)
 {
     ImGui_ImplGLUT_MouseFunc(button, state, x, y);
+    if (ImGui::GetIO().WantCaptureMouse)
+        return;
+
     mouse_buttons[button] = state;
 
     // Update camera
@@ -139,6 +145,9 @@ void mousePassiveMotion(int x, int y)
 void mouseMotion(int x, int y)
 {
     ImGui_ImplGLUT_MotionFunc(x, y);
+    if (ImGui::GetIO().WantCaptureMouse)
+        return;
+
     int mouse_dx = mouse_x - x;
     int mouse_dy = mouse_y - y;
     float dxn = static_cast<float>(mouse_dx) / static_cast<float>(window_w);
