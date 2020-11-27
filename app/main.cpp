@@ -8,6 +8,10 @@
 #include <GL/glut.h>
 #include "camera_trackball.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glut.h"
+#include "imgui/imgui_impl_opengl2.h"
+
 #include "boid.h"
 const float FOVY = 60.0f;
 const float NEARCLIP = 0.1f;
@@ -48,7 +52,7 @@ void init(void)
         mouse_buttons[i] = GLUT_UP;
 
     // Init camera
-    camera.init({0.0f, 0.0f, 0.0f}, 10.0f);
+    camera.init({0.0f, 0.0f, 0.0f}, 30.0f);
 
     for (int j = 0; j < 30; j++)
     {
@@ -68,17 +72,29 @@ void display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    ImGui_ImplOpenGL2_NewFrame();
+    ImGui_ImplGLUT_NewFrame();
+
+    ImGui::Begin("Test");
+    ImGui::Text("OK");
+    ImGui::End();
+
     //Camera setup
     camera.lookAt();
 
     for (const auto &boid : boids_)
         boid.draw();
 
+    ImGui::Render();
+    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+
     glutSwapBuffers();
 }
 
 void reshape(int w, int h)
 {
+    ImGui_ImplGLUT_ReshapeFunc(w, h);
+
     glViewport(0, 0, (GLsizei)w, (GLsizei)h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -87,6 +103,7 @@ void reshape(int w, int h)
 
 void processKeys(unsigned char key, int x, int y)
 {
+    ImGui_ImplGLUT_KeyboardFunc(key, x, y);
 }
 
 void systemEvolution()
@@ -106,6 +123,7 @@ void systemEvolution()
 
 void mouseButton(int button, int state, int x, int y)
 {
+    ImGui_ImplGLUT_MouseFunc(button, state, x, y);
     mouse_buttons[button] = state;
 
     // Update camera
@@ -120,6 +138,7 @@ void mousePassiveMotion(int x, int y)
 
 void mouseMotion(int x, int y)
 {
+    ImGui_ImplGLUT_MotionFunc(x, y);
     int mouse_dx = mouse_x - x;
     int mouse_dy = mouse_y - y;
     float dxn = static_cast<float>(mouse_dx) / static_cast<float>(window_w);
@@ -143,6 +162,7 @@ void timer(int v)
 // Main function: GLUT runs as a console application
 int main(int argc, char **argv)
 {
+    // Init GLUT and create window
     glutInit(&argc, argv);
     glutInitWindowSize(window_w, window_h);
     glutInitWindowPosition(WINDOW_X, WINDOW_Y);
@@ -151,17 +171,31 @@ int main(int argc, char **argv)
     glutCreateWindow("Test window");
 
     init();
-    glutDisplayFunc(display);
-    glutReshapeFunc(reshape);
-    glutMouseFunc(mouseButton);
-    glutPassiveMotionFunc(mousePassiveMotion);
-    glutKeyboardFunc(processKeys);
-    glutMotionFunc(mouseMotion);
 
+    // Register callbacks
+    glutDisplayFunc(display);
     glutIdleFunc(systemEvolution);
     glutTimerFunc(1000 / FPS, timer, 0);
 
+    // Setup Dear ImGui context
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplGLUT_Init();
+    ImGui_ImplGLUT_InstallFuncs();
+    ImGui_ImplOpenGL2_Init();
+
+    // Replace some handlers after ImGui_ImplGLUT_InstallFuncs() sets its own
+    // our impls will call the Imgui impls internally
+    glutPassiveMotionFunc(mousePassiveMotion);
+    glutReshapeFunc(reshape);
+    glutMouseFunc(mouseButton);
+    glutKeyboardFunc(processKeys);
+    glutMotionFunc(mouseMotion);
+
     glutMainLoop();
 
+    ImGui_ImplOpenGL2_Shutdown();
+    ImGui_ImplGLUT_Shutdown();
+    ImGui::DestroyContext();
     return 0;
 }
