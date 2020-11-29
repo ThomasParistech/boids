@@ -33,7 +33,8 @@ Boid::Boid(const Vec3f &position, const Vec3f &speed) : id_(next_id_++),
                                                         avg_position_{0, 0, 0},
                                                         avg_speed_{0, 0, 0},
                                                         separation_force_{0, 0, 0},
-                                                        size_(1.0)
+                                                        size_(1.0),
+                                                        last_t_(0)
 {
 }
 
@@ -57,7 +58,7 @@ void Boid::add_neighbor(const Boid &boid)
 }
 
 #include <iostream>
-void Boid::update(float dt)
+void Boid::update(float t)
 {
     // Update speed
     if (n_neighbors_ != 0)
@@ -78,6 +79,8 @@ void Boid::update(float dt)
     }
 
     // Update position
+    const float dt = (t - last_t_);
+    last_t_ = t;
     position_ += speed_ * dt;
 
     // Clear

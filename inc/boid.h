@@ -22,7 +22,7 @@ public:
 
     void add_neighbor(const Boid &boid);
 
-    void update(float dt);
+    void update(float t);
 
     void draw() const;
 
@@ -39,6 +39,8 @@ private:
     static int next_id_;
 
     int id_;
+
+    float last_t_;
 
     int n_neighbors_;
     Vec3f avg_position_;     // Cohesion

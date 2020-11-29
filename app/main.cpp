@@ -30,12 +30,6 @@ int window_h = 600;
 // Camera
 CameraTrackball camera;
 
-// Time management
-float t = 0;
-float last_t = 0;
-float dt = 0;
-
-
 std::vector<Boid> boids_;
 
 void init(void)
@@ -111,17 +105,14 @@ void processKeys(unsigned char key, int x, int y)
 
 void systemEvolution()
 {
-    last_t = t;
-    t = (float)glutGet(GLUT_ELAPSED_TIME);
-    dt = (t - last_t) * 0.001;
-
     for (auto &boid_1 : boids_)
         for (auto &boid_2 : boids_)
             if (boid_1.get_id() != boid_2.get_id())
                 boid_1.add_neighbor(boid_2);
 
+    const float t = (float)glutGet(GLUT_ELAPSED_TIME) * 0.001;
     for (auto &boid : boids_)
-        boid.update(dt);
+        boid.update(t);
 }
 
 void mouseButton(int button, int state, int x, int y)
