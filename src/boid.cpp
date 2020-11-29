@@ -16,6 +16,7 @@ float Boid::separation_min_dist_ = 1;
 float Boid::separation_factor_ = 0.1;
 float Boid::cohesion_factor_ = 0.05;
 float Boid::alignment_factor_ = 0.04;
+float Boid::target_attraction_factor_ = 0.1;
 
 float Boid::randomness_ = 0;
 
@@ -32,29 +33,39 @@ Boid::Boid(const Vec3f &position, const Vec3f &speed) : id_(next_id_++),
                                                         n_neighbors_(0),
                                                         avg_position_{0, 0, 0},
                                                         avg_speed_{0, 0, 0},
-                                                        separation_force_{0, 0, 0},
+                                                        proximity_force_{0, 0, 0},
                                                         size_(1.0),
-                                                        last_t_(0)
+                                                        last_t_(0),
+                                                        boid_type_(0)
 {
 }
 
 void Boid::add_neighbor(const Boid &boid)
 {
-    n_neighbors_++;
+    if (boid_type_ == boid.get_type()) // different for each child class
+    {
+        n_neighbors_++;
 
-    // Cohesion
-    avg_position_ += boid.get_position();
+        // Cohesion
+        avg_position_ += boid.get_position();
 
-    // Alignment
-    avg_speed_ += boid.get_speed();
+        // Alignment
+        avg_speed_ += boid.get_speed();
+    }
+
+    // Separation + Target attraction
+    proximity_force_ += get_exerced_proximity_force(boid);
+}
+
+Vec3f Boid::get_exerced_proximity_force(const Boid &boid)
+{
+    if (boid.get_id() == id_) // Can't repel itself
+        return Vec3f(0, 0, 0);
 
     // Separation
-    if (boid.get_id() != id_) // Can't repel itself
-    {
-        const Vec3f diff = position_ - boid.get_position();
-        const auto dist = std::max(separation_min_dist_, diff.norm()); // In case close to zero
-        separation_force_ += diff / (dist * dist);
-    }
+    const Vec3f diff = position_ - boid.get_position();
+    const auto dist = std::max(separation_min_dist_, diff.norm()); // In case close to zero
+    return separation_factor_ * diff / (dist * dist);
 }
 
 #include <iostream>
@@ -72,7 +83,7 @@ void Boid::update(float t)
 
         const Vec3f random_force = randomness_ * Vec3f(dv_x, dv_y, dv_z);
 
-        speed_ += separation_factor_ * separation_force_;
+        speed_ += proximity_force_;
         speed_ += cohesion_factor_ * cohesion_force;
         speed_ += alignment_factor_ * alignment_force;
         speed_ += random_force;
@@ -87,7 +98,7 @@ void Boid::update(float t)
     n_neighbors_ = 0;
     avg_position_ = Vec3f(0, 0, 0);
     avg_speed_ = Vec3f(0, 0, 0);
-    separation_force_ = Vec3f(0, 0, 0);
+    proximity_force_ = Vec3f(0, 0, 0);
 }
 
 void Boid::draw() const

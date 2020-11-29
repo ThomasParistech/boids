@@ -73,7 +73,9 @@ void display()
     ImGui::SliderFloat("Separation", &Boid::separation_factor_, 0.0f, 0.1f);
     ImGui::SliderFloat("Cohesion", &Boid::cohesion_factor_, 0.0f, 0.1f);
     ImGui::SliderFloat("Alignment", &Boid::alignment_factor_, 0.0f, 0.1f);
+    ImGui::SliderFloat("Target attraction", &Boid::target_attraction_factor_, 0.0f, 0.1f);
     ImGui::SliderFloat("Randomness", &Boid::randomness_, 0.0f, 0.1f);
+
     ImGui::End();
 
     //Camera setup
