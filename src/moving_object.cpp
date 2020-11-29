@@ -1,46 +1,46 @@
 /*********************************************************************************************************************
- * File : boid.cpp                                                                                                   *
+ * File : moving_object.cpp                                                                                          *
  *                                                                                                                   *
  * 2020 Thomas Rouch                                                                                                 *
  *********************************************************************************************************************/
 
 #include <GL/glut.h>
 
-#include "boid.h"
+#include "moving_object.h"
 #include "gl_utils.h"
 
-float Boid::neighborhood_max_dist_ = 10;
+float MovingObject::neighborhood_max_dist_ = 10;
 
-float Boid::separation_min_dist_ = 1;
+float MovingObject::separation_min_dist_ = 1;
 
-float Boid::separation_factor_ = 0.1;
-float Boid::cohesion_factor_ = 0.05;
-float Boid::alignment_factor_ = 0.04;
-float Boid::target_attraction_factor_ = 0.1;
+float MovingObject::separation_factor_ = 0.1;
+float MovingObject::cohesion_factor_ = 0.05;
+float MovingObject::alignment_factor_ = 0.04;
+float MovingObject::target_attraction_factor_ = 0.1;
 
-float Boid::randomness_ = 0;
+float MovingObject::randomness_ = 0;
 
-int Boid::next_id_ = 0;
+int MovingObject::next_id_ = 0;
 
-bool Boid::are_neighbors(const Boid &left, const Boid &right)
+bool MovingObject::are_neighbors(const MovingObject &left, const MovingObject &right)
 {
     return (left.get_position() - right.get_position()).norm() < neighborhood_max_dist_;
 }
 
-Boid::Boid(const Vec3f &position, const Vec3f &speed) : id_(next_id_++),
-                                                        position_(position),
-                                                        speed_(speed),
-                                                        n_neighbors_(0),
-                                                        avg_position_{0, 0, 0},
-                                                        avg_speed_{0, 0, 0},
-                                                        proximity_force_{0, 0, 0},
-                                                        size_(1.0),
-                                                        last_t_(0),
-                                                        boid_type_(0)
+MovingObject::MovingObject(const Vec3f &position, const Vec3f &speed) : id_(next_id_++),
+                                                                        position_(position),
+                                                                        speed_(speed),
+                                                                        n_neighbors_(0),
+                                                                        avg_position_{0, 0, 0},
+                                                                        avg_speed_{0, 0, 0},
+                                                                        proximity_force_{0, 0, 0},
+                                                                        size_(1.0),
+                                                                        last_t_(0),
+                                                                        boid_type_(0)
 {
 }
 
-void Boid::add_neighbor(const Boid &boid)
+void MovingObject::add_neighbor(const MovingObject &boid)
 {
     if (boid_type_ == boid.get_type()) // different for each child class
     {
@@ -57,7 +57,7 @@ void Boid::add_neighbor(const Boid &boid)
     proximity_force_ += get_exerced_proximity_force(boid);
 }
 
-Vec3f Boid::get_exerced_proximity_force(const Boid &boid)
+Vec3f MovingObject::get_exerced_proximity_force(const MovingObject &boid)
 {
     if (boid.get_id() == id_) // Can't repel itself
         return Vec3f(0, 0, 0);
@@ -69,7 +69,7 @@ Vec3f Boid::get_exerced_proximity_force(const Boid &boid)
 }
 
 #include <iostream>
-void Boid::update(float t)
+void MovingObject::update(float t)
 {
     // Update speed
     if (n_neighbors_ != 0)
@@ -101,7 +101,7 @@ void Boid::update(float t)
     proximity_force_ = Vec3f(0, 0, 0);
 }
 
-void Boid::draw() const
+void MovingObject::draw() const
 {
     glPushMatrix();
 

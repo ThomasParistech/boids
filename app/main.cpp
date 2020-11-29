@@ -12,7 +12,8 @@
 #include "imgui/imgui_impl_glut.h"
 #include "imgui/imgui_impl_opengl2.h"
 
-#include "boid.h"
+#include "moving_object.h"
+
 const float FOVY = 60.0f;
 const float NEARCLIP = 0.1f;
 const float FARCLIP = 100.0f;
@@ -30,7 +31,7 @@ int window_h = 600;
 // Camera
 CameraTrackball camera;
 
-std::vector<Boid> boids_;
+std::vector<MovingObject> moving_objects_;
 
 void init(void)
 {
@@ -58,7 +59,7 @@ void init(void)
         float u = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float v = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float w = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        boids_.emplace_back(scale * Vec3f(x, y, z), Vec3f(u, v, w));
+        moving_objects_.emplace_back(scale * Vec3f(x, y, z), Vec3f(u, v, w));
     }
 }
 
@@ -70,18 +71,18 @@ void display()
     ImGui_ImplGLUT_NewFrame();
 
     ImGui::Begin("Test");
-    ImGui::SliderFloat("Separation", &Boid::separation_factor_, 0.0f, 0.1f);
-    ImGui::SliderFloat("Cohesion", &Boid::cohesion_factor_, 0.0f, 0.1f);
-    ImGui::SliderFloat("Alignment", &Boid::alignment_factor_, 0.0f, 0.1f);
-    ImGui::SliderFloat("Target attraction", &Boid::target_attraction_factor_, 0.0f, 0.1f);
-    ImGui::SliderFloat("Randomness", &Boid::randomness_, 0.0f, 0.1f);
+    ImGui::SliderFloat("Separation", &MovingObject::separation_factor_, 0.0f, 0.1f);
+    ImGui::SliderFloat("Cohesion", &MovingObject::cohesion_factor_, 0.0f, 0.1f);
+    ImGui::SliderFloat("Alignment", &MovingObject::alignment_factor_, 0.0f, 0.1f);
+    ImGui::SliderFloat("Target attraction", &MovingObject::target_attraction_factor_, 0.0f, 0.1f);
+    ImGui::SliderFloat("Randomness", &MovingObject::randomness_, 0.0f, 0.1f);
 
     ImGui::End();
 
     //Camera setup
     camera.lookAt();
 
-    for (const auto &boid : boids_)
+    for (const auto &boid : moving_objects_)
         boid.draw();
 
     ImGui::Render();
@@ -107,13 +108,13 @@ void processKeys(unsigned char key, int x, int y)
 
 void systemEvolution()
 {
-    for (auto &boid_1 : boids_)
-        for (auto &boid_2 : boids_)
+    for (auto &boid_1 : moving_objects_)
+        for (auto &boid_2 : moving_objects_)
             if (boid_1.get_id() != boid_2.get_id())
                 boid_1.add_neighbor(boid_2);
 
     const float t = (float)glutGet(GLUT_ELAPSED_TIME) * 0.001;
-    for (auto &boid : boids_)
+    for (auto &boid : moving_objects_)
         boid.update(t);
 }
 

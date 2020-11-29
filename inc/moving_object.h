@@ -1,29 +1,29 @@
 /*********************************************************************************************************************
- * File : boid.h                                                                                                     *
+ * File : moving_object.h                                                                                            *
  *                                                                                                                   *
  * 2020 Thomas Rouch                                                                                                 *
  *********************************************************************************************************************/
 
-#ifndef BOID_H
-#define BOID_H
+#ifndef MOVING_OBJECT_H
+#define MOVING_OBJECT_H
 
 #include <Eigen/Dense>
 
 using Vec3f = Eigen::Vector3f;
 
-class Boid
+class MovingObject
 {
 public:
-    Boid(const Vec3f &position, const Vec3f &speed = Vec3f(0, 0, 0));
+    MovingObject(const Vec3f &position, const Vec3f &speed = Vec3f(0, 0, 0));
 
     inline const Vec3f &get_position() const { return position_; }
     inline const Vec3f &get_speed() const { return speed_; }
     inline int get_id() const { return id_; }
     inline int get_type() const { return boid_type_; }
 
-    void add_neighbor(const Boid &boid);
+    void add_neighbor(const MovingObject &boid);
 
-    Vec3f get_exerced_proximity_force(const Boid &boid);
+    Vec3f get_exerced_proximity_force(const MovingObject &boid);
 
     void update(float t);
 
@@ -37,7 +37,7 @@ public:
     static float target_attraction_factor_;
     static float randomness_;
 
-    static bool are_neighbors(const Boid &left, const Boid &right);
+    static bool are_neighbors(const MovingObject &left, const MovingObject &right);
 
 private:
     static int next_id_;
@@ -57,4 +57,4 @@ private:
     float size_;
 };
 
-#endif // BOID_H
+#endif // MOVING_OBJECT_H
