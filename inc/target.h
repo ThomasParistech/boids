@@ -1,21 +1,26 @@
 /*********************************************************************************************************************
- * File : boid.h                                                                                                     *
+ * File : target.h                                                                                                   *
  *                                                                                                                   *
  * 2020 Thomas Rouch                                                                                                 *
  *********************************************************************************************************************/
 
-#ifndef BOID_H
-#define BOID_H
+#ifndef TARGET_H
+#define TARGET_H
+
+#include <functional>
 
 #include "moving_object.h"
 
-class Boid : public MovingObject
+class Target : public MovingObject
 {
 public:
-    Boid(const Vec3f &position, const Vec3f &speed = Vec3f(0, 0, 0));
-    virtual ~Boid() = default;
+    using UpdateSpeedFunc = std::function<void(float, Vec3f &)>;
 
-    void add_neighbor(const MovingObject &object);
+    Target(
+        const Vec3f &position,
+        UpdateSpeedFunc update_speed_func = [](float, Vec3f &) {});
+
+    virtual ~Target() = default;
 
     Vec3f get_exerced_proximity_force(const MovingObject &object) const override;
 
@@ -23,13 +28,12 @@ public:
 
     void draw() const override;
 
+    static float target_attraction_factor_;
+    static float target_speed_alignment_factor_;
+
 private:
     float last_t_;
-
-    int n_neighbors_;
-    Vec3f avg_position_;    // Cohesion
-    Vec3f avg_speed_;       // Alignment
-    Vec3f proximity_force_; // Separation + Target attraction
+    UpdateSpeedFunc update_speed_func_;
 };
 
-#endif // BOID_H
+#endif // TARGET_H

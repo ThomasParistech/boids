@@ -23,7 +23,7 @@ public:
     inline int get_id() const { return id_; }
     inline int get_type() const { return boid_type_; }
 
-    virtual Vec3f get_exerced_proximity_force(const MovingObject &boid) = 0;
+    virtual Vec3f get_exerced_proximity_force(const MovingObject &boid) const = 0;
     virtual void update(float t) = 0;
     virtual void draw() const = 0;
 
@@ -32,8 +32,9 @@ public:
     static float separation_factor_;
     static float cohesion_factor_;
     static float alignment_factor_;
-    static float target_attraction_factor_;
     static float randomness_;
+    static float max_speed_;
+    static float min_cos_angle_;
 
     static bool are_neighbors(const MovingObject &left, const MovingObject &right);
 

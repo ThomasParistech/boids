@@ -13,6 +13,10 @@
 #include "imgui/imgui_impl_opengl2.h"
 
 #include "boid.h"
+#include "target.h"
+
+#include <memory>
+#include <iostream>
 
 const float FOVY = 60.0f;
 const float NEARCLIP = 0.1f;
@@ -32,6 +36,11 @@ int window_h = 600;
 CameraTrackball camera;
 
 std::vector<Boid> boids_;
+std::vector<Target> targets_;
+Target *crt_target_;
+int crt_target_id_ = 0;
+
+float omega_ball_ = 0.2f;
 
 void init(void)
 {
@@ -49,9 +58,9 @@ void init(void)
     // Init camera
     camera.init({0.0f, 0.0f, 0.0f}, 30.0f);
 
-    for (int j = 0; j < 30; j++)
+    for (int j = 0; j < 1000; j++)
     {
-        int scale = 10;
+        int scale = 15;
         float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -59,8 +68,20 @@ void init(void)
         float u = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float v = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float w = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        boids_.emplace_back(scale * Vec3f(x, y, z), Vec3f(u, v, w));
+        // boids_.emplace_back(scale * Vec3f(x, y, z), 0.1 * Vec3f(u, v, w));
+        boids_.emplace_back(scale * Vec3f(x, y, z), Vec3f(0, 0, 0));
     }
+
+    for (int i : {0, 30})
+        for (int j : {0, 30})
+            for (int k : {0, 30})
+                targets_.emplace_back(Vec3f(i, j, k));
+
+    // target_ = std::make_unique<Target>(Vec3f(10, 10, 10), [](float t_s, Vec3f &speed) {
+    //     speed[0] = 15 * omega_ball_ * std::cos(t_s * omega_ball_);
+    //     speed[1] = 15 * omega_ball_ * std::sin(t_s * omega_ball_);
+    //     speed[2] = 0;
+    // });
 }
 
 void display()
@@ -71,11 +92,17 @@ void display()
     ImGui_ImplGLUT_NewFrame();
 
     ImGui::Begin("Test");
+    ImGui::SliderFloat("Neighbor Dist", &MovingObject::neighborhood_max_dist_, 0.0f, 12.f);
     ImGui::SliderFloat("Separation", &MovingObject::separation_factor_, 0.0f, 0.1f);
     ImGui::SliderFloat("Cohesion", &MovingObject::cohesion_factor_, 0.0f, 0.1f);
-    ImGui::SliderFloat("Alignment", &MovingObject::alignment_factor_, 0.0f, 0.1f);
-    ImGui::SliderFloat("Target attraction", &MovingObject::target_attraction_factor_, 0.0f, 0.1f);
-    ImGui::SliderFloat("Randomness", &MovingObject::randomness_, 0.0f, 0.1f);
+    ImGui::SliderFloat("Alignment", &MovingObject::alignment_factor_, 0.0f, 0.02f);
+    ImGui::SliderFloat("Target attraction", &Target::target_attraction_factor_, 0.0f, 1.f);
+    ImGui::SliderFloat("Target speed attraction", &Target::target_speed_alignment_factor_, 0.0f, 0.05f);
+    ImGui::SliderFloat("Randomness", &MovingObject::randomness_, 0.0f, 2.f);
+    ImGui::SliderFloat("Max speed", &MovingObject::max_speed_, 0.0f, 20.f);
+    ImGui::SliderFloat("Min cos angle", &MovingObject::min_cos_angle_, -1.f, 1.f);
+
+    ImGui::SliderFloat("Ball speed", &omega_ball_, 0.0f, 3.f);
 
     ImGui::End();
 
@@ -84,6 +111,9 @@ void display()
 
     for (const auto &boid : boids_)
         boid.draw();
+
+    if (crt_target_)
+        crt_target_->draw();
 
     ImGui::Render();
     ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
@@ -104,6 +134,11 @@ void reshape(int w, int h)
 void processKeys(unsigned char key, int x, int y)
 {
     ImGui_ImplGLUT_KeyboardFunc(key, x, y);
+    if (key == 32) // Space
+    {
+        crt_target_id_ = (crt_target_id_ + 1) % targets_.size();
+        crt_target_ = &targets_[crt_target_id_];
+    }
 }
 
 void systemEvolution()
@@ -111,11 +146,18 @@ void systemEvolution()
     for (auto &boid_1 : boids_)
         for (auto &boid_2 : boids_)
             if (boid_1.get_id() != boid_2.get_id())
-                boid_1.add_neighbor(boid_2);
+                if (MovingObject::are_neighbors(boid_1, boid_2))
+                    boid_1.add_neighbor(boid_2);
+
+    if (crt_target_)
+        for (auto &boid : boids_)
+            boid.add_neighbor(*crt_target_);
 
     const float t = (float)glutGet(GLUT_ELAPSED_TIME) * 0.001;
     for (auto &boid : boids_)
         boid.update(t);
+
+    // target_->update(t);
 }
 
 void mouseButton(int button, int state, int x, int y)

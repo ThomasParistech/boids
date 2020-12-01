@@ -8,6 +8,7 @@
 
 #include "boid.h"
 #include "gl_utils.h"
+#include <iostream>
 
 Boid::Boid(const Vec3f &position, const Vec3f &speed) : MovingObject(position, speed)
 {
@@ -21,30 +22,35 @@ Boid::Boid(const Vec3f &position, const Vec3f &speed) : MovingObject(position, s
     proximity_force_ = Vec3f(0, 0, 0);
 }
 
-void Boid::add_neighbor(const Boid &boid)
+void Boid::add_neighbor(const MovingObject &object)
 {
-    if (boid_type_ == boid.get_type()) // different for each child class
+    if (boid_type_ == object.get_type()) // different for each child class
     {
-        n_neighbors_++;
+        // Vision angle
+        const Vec3f diff = object.get_position() - position_;
+        if (diff.dot(speed_) >= min_cos_angle_ * speed_.norm() * diff.norm())
+        {
+            n_neighbors_++;
 
-        // Cohesion
-        avg_position_ += boid.get_position();
+            // Cohesion
+            avg_position_ += object.get_position();
 
-        // Alignment
-        avg_speed_ += boid.get_speed();
+            // Alignment
+            avg_speed_ += object.get_speed();
+        }
     }
 
     // Separation + Target attraction
-    proximity_force_ += get_exerced_proximity_force(boid);
+    proximity_force_ += object.get_exerced_proximity_force(*this);
 }
 
-Vec3f Boid::get_exerced_proximity_force(const MovingObject &object)
+Vec3f Boid::get_exerced_proximity_force(const MovingObject &object) const
 {
     if (object.get_id() == id_) // Can't repel itself
         return Vec3f(0, 0, 0);
 
     // Separation
-    const Vec3f diff = position_ - object.get_position();
+    const Vec3f diff = object.get_position() - position_;
     const auto dist = std::max(separation_min_dist_, diff.norm()); // In case close to zero
     return separation_factor_ * diff / (dist * dist);
 }
@@ -54,20 +60,25 @@ void Boid::update(float t)
     // Update speed
     if (n_neighbors_ != 0)
     {
-        const Vec3f cohesion_force = 1.0 / n_neighbors_ * avg_position_ - position_;
-        const Vec3f alignment_force = 1.0 / n_neighbors_ * avg_speed_ - speed_;
+        const Vec3f cohesion_force = avg_position_ / n_neighbors_ - position_;
+        const Vec3f alignment_force = avg_speed_ / n_neighbors_ - speed_;
 
-        const float dv_x = -0.5 + static_cast<float>(std::rand()) / RAND_MAX;
-        const float dv_y = -0.5 + static_cast<float>(std::rand()) / RAND_MAX;
-        const float dv_z = -0.5 + static_cast<float>(std::rand()) / RAND_MAX;
-
-        const Vec3f random_force = randomness_ * Vec3f(dv_x, dv_y, dv_z);
-
-        speed_ += proximity_force_;
         speed_ += cohesion_factor_ * cohesion_force;
         speed_ += alignment_factor_ * alignment_force;
-        speed_ += random_force;
     }
+
+    const float dv_x = -0.5 + static_cast<float>(std::rand()) / RAND_MAX;
+    const float dv_y = -0.5 + static_cast<float>(std::rand()) / RAND_MAX;
+    const float dv_z = -0.5 + static_cast<float>(std::rand()) / RAND_MAX;
+
+    const Vec3f random_force = randomness_ * Vec3f(dv_x, dv_y, dv_z);
+    speed_ += random_force;
+
+    speed_ += proximity_force_;
+
+    // Clamp speed if needed
+    if (speed_.norm() > max_speed_)
+        speed_ = max_speed_ * speed_.normalized();
 
     // Update position
     const float dt = (t - last_t_);

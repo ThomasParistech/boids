@@ -10,12 +10,14 @@ float MovingObject::neighborhood_max_dist_ = 10;
 
 float MovingObject::separation_min_dist_ = 1;
 
-float MovingObject::separation_factor_ = 0.1;
-float MovingObject::cohesion_factor_ = 0.05;
-float MovingObject::alignment_factor_ = 0.04;
-float MovingObject::target_attraction_factor_ = 0.1;
+float MovingObject::separation_factor_ = 0.02;
+float MovingObject::cohesion_factor_ = 0.07;
+float MovingObject::alignment_factor_ = 0.005;
 
 float MovingObject::randomness_ = 0;
+float MovingObject::max_speed_ = 10.f;
+
+float MovingObject::min_cos_angle_ = -0.5f;
 
 int MovingObject::next_id_ = 0;
 
