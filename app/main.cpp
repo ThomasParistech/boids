@@ -14,6 +14,7 @@
 
 #include "boid.h"
 #include "target.h"
+#include "obstacle.h"
 
 #include <memory>
 #include <iostream>
@@ -39,6 +40,10 @@ std::vector<Boid> boids_;
 std::vector<Target> targets_;
 Target *crt_target_;
 int crt_target_id_ = 0;
+
+std::vector<Obstacle> obstacles_;
+Obstacle *crt_obstacle_;
+int crt_obstacle_id_ = 0;
 
 float omega_ball_ = 0.2f;
 
@@ -74,8 +79,11 @@ void init(void)
 
     for (int i : {0, 30})
         for (int j : {0, 30})
-            for (int k : {0, 30})
-                targets_.emplace_back(Vec3f(i, j, k));
+            targets_.emplace_back(Vec3f(i, j, 0));
+
+    for (int i : {5, 15, 25})
+        for (int j : {5, 15, 25})
+            obstacles_.emplace_back(Vec3f(i, j, 0));
 
     // target_ = std::make_unique<Target>(Vec3f(10, 10, 10), [](float t_s, Vec3f &speed) {
     //     speed[0] = 15 * omega_ball_ * std::cos(t_s * omega_ball_);
@@ -98,6 +106,7 @@ void display()
     ImGui::SliderFloat("Alignment", &MovingObject::alignment_factor_, 0.0f, 0.02f);
     ImGui::SliderFloat("Target attraction", &Target::target_attraction_factor_, 0.0f, 1.f);
     ImGui::SliderFloat("Target speed attraction", &Target::target_speed_alignment_factor_, 0.0f, 0.05f);
+    ImGui::SliderFloat("Obstacle", &Obstacle::obstacle_factor_, 0.f, 20.f);
     ImGui::SliderFloat("Randomness", &MovingObject::randomness_, 0.0f, 2.f);
     ImGui::SliderFloat("Max speed", &MovingObject::max_speed_, 0.0f, 20.f);
     ImGui::SliderFloat("Min cos angle", &MovingObject::min_cos_angle_, -1.f, 1.f);
@@ -114,6 +123,9 @@ void display()
 
     if (crt_target_)
         crt_target_->draw();
+
+    for (const auto &obstacle : obstacles_)
+        obstacle.draw();
 
     ImGui::Render();
     ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
@@ -139,6 +151,11 @@ void processKeys(unsigned char key, int x, int y)
         crt_target_id_ = (crt_target_id_ + 1) % targets_.size();
         crt_target_ = &targets_[crt_target_id_];
     }
+    // else if (key == 'a')
+    // {
+    //     crt_obstacle_id_ = (crt_obstacle_id_ + 1) % obstacles_.size();
+    //     crt_obstacle_ = &obstacles_[crt_obstacle_id_];
+    // }
 }
 
 void systemEvolution()
@@ -152,6 +169,10 @@ void systemEvolution()
     if (crt_target_)
         for (auto &boid : boids_)
             boid.add_neighbor(*crt_target_);
+
+    for (const auto &obstacle : obstacles_)
+        for (auto &boid : boids_)
+            boid.add_neighbor(obstacle);
 
     const float t = (float)glutGet(GLUT_ELAPSED_TIME) * 0.001;
     for (auto &boid : boids_)
