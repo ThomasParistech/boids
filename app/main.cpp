@@ -42,10 +42,23 @@ Target *crt_target_;
 int crt_target_id_ = 0;
 
 std::vector<Obstacle> obstacles_;
-Obstacle *crt_obstacle_;
-int crt_obstacle_id_ = 0;
 
 float omega_ball_ = 0.2f;
+
+void add_boid()
+{
+    int scale = 15;
+
+    float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+    float u = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    float v = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    float w = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    // boids_.emplace_back(scale * Vec3f(x, y, z), 0.1 * Vec3f(u, v, w));
+    boids_.emplace_back(scale * Vec3f(x, y, z), Vec3f(0, 0, 0));
+}
 
 void init(void)
 {
@@ -64,32 +77,24 @@ void init(void)
     camera.init({0.0f, 0.0f, 0.0f}, 30.0f);
 
     for (int j = 0; j < 1000; j++)
-    {
-        int scale = 15;
-        float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        add_boid();
 
-        float u = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        float v = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        float w = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        // boids_.emplace_back(scale * Vec3f(x, y, z), 0.1 * Vec3f(u, v, w));
-        boids_.emplace_back(scale * Vec3f(x, y, z), Vec3f(0, 0, 0));
-    }
+    const int scale = 3;
+    for (double i : {-2 * scale, 2 * scale})
+        targets_.emplace_back(scale * Vec3f(i, 0, 0));
 
-    for (int i : {0, 30})
-        for (int j : {0, 30})
-            targets_.emplace_back(Vec3f(i, j, 0));
+    for (double k : {-9, 9})
+        targets_.emplace_back(scale * Vec3f(0, 0, k));
 
-    for (int i : {5, 15, 25})
-        for (int j : {5, 15, 25})
-            obstacles_.emplace_back(Vec3f(i, j, 0));
+    for (double j : {-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7})
+        for (double k : {-7, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 7})
+            obstacles_.emplace_back(scale * Vec3f(0, j, k), scale);
 
-    // target_ = std::make_unique<Target>(Vec3f(10, 10, 10), [](float t_s, Vec3f &speed) {
-    //     speed[0] = 15 * omega_ball_ * std::cos(t_s * omega_ball_);
-    //     speed[1] = 15 * omega_ball_ * std::sin(t_s * omega_ball_);
-    //     speed[2] = 0;
-    // });
+    for (double j : {-7, -6, -5, -4, -3, 0, 3, 4, 5, 6, 7})
+        for (double k : {-1, 0, 1})
+            obstacles_.emplace_back(scale * Vec3f(0, j, k), scale);
+
+    // obstacles_.emplace_back(square_size_ * Vec3f(0.5, 0.5, 0), 3);
 }
 
 void display()
@@ -106,7 +111,7 @@ void display()
     ImGui::SliderFloat("Alignment", &MovingObject::alignment_factor_, 0.0f, 0.02f);
     ImGui::SliderFloat("Target attraction", &Target::target_attraction_factor_, 0.0f, 1.f);
     ImGui::SliderFloat("Target speed attraction", &Target::target_speed_alignment_factor_, 0.0f, 0.05f);
-    ImGui::SliderFloat("Obstacle", &Obstacle::obstacle_factor_, 0.f, 20.f);
+    ImGui::SliderFloat("Obstacle", &Obstacle::obstacle_factor_, 0.f, 200.f);
     ImGui::SliderFloat("Randomness", &MovingObject::randomness_, 0.0f, 2.f);
     ImGui::SliderFloat("Max speed", &MovingObject::max_speed_, 0.0f, 20.f);
     ImGui::SliderFloat("Min cos angle", &MovingObject::min_cos_angle_, -1.f, 1.f);
@@ -151,11 +156,8 @@ void processKeys(unsigned char key, int x, int y)
         crt_target_id_ = (crt_target_id_ + 1) % targets_.size();
         crt_target_ = &targets_[crt_target_id_];
     }
-    // else if (key == 'a')
-    // {
-    //     crt_obstacle_id_ = (crt_obstacle_id_ + 1) % obstacles_.size();
-    //     crt_obstacle_ = &obstacles_[crt_obstacle_id_];
-    // }
+    else if (key == 'n')
+        add_boid();
 }
 
 void systemEvolution()

@@ -98,13 +98,13 @@ void Boid::draw() const
 
     glTranslatef(position_[0], position_[1], position_[2]);
     GlUtils::align_view(speed_);
-    GlUtils::draw_box(Vec3f(0.6, 0.3, 0.3));
+    GlUtils::draw_box(Vec3f(0.6, 0.1, 0.1));
 
     glTranslatef(-0.6, 0, 0);
-    GlUtils::draw_yz_plane(0.4, 0.4, Vec3f(0.0, 0.0, 1.0));
+    GlUtils::draw_yz_plane(0.3, 0.3, Vec3f(0.0, 0.0, 1.0));
 
     glTranslatef(1.2, 0, 0);
-    GlUtils::draw_pyramid(Vec3f(0.1, 0.1, 0.1), Vec3f(1.0, 1.0, 0.0));
+    GlUtils::draw_pyramid(Vec3f(0.4, 0.1, 0.1), Vec3f(1.0, 1.0, 0.0));
     //GlUtils::draw_pyramid(size_ * Vec3f(1.0, 0.1, 0.1), Vec3f(0.2, 0.3, 0.8));
     glPopMatrix();
 }
