@@ -106,6 +106,20 @@ void Boid::update(float t)
     proximity_force_ = Vec3f(0, 0, 0);
 }
 
+void Boid::draw_wing() const
+{
+    glPushMatrix();
+    glRotatef(80 * cosf(last_t_ / 0.2), 1, 0, 0);
+    glColor3f(color_[0], color_[1], color_[2]);
+    glBegin(GL_TRIANGLES);
+    glNormal3f(0, 0, 1);
+    glVertex3f(0.3, 0, 0);
+    glVertex3f(-0.3, 0, 0);
+    glVertex3f(0, 0.5, 0);
+    glEnd();
+    glPopMatrix();
+}
+
 void Boid::draw() const
 {
     glPushMatrix();
@@ -114,11 +128,19 @@ void Boid::draw() const
     GlUtils::align_view(speed_);
     GlUtils::draw_box(Vec3f(0.6, 0.1, 0.1), color_);
 
-    glTranslatef(-0.6, 0, 0);
-    GlUtils::draw_yz_plane(0.3, 0.3, Vec3f(0.0, 0.0, 1.0));
+    glPushMatrix();
+    glTranslatef(0, 0.1, 0);
+    draw_wing();
+    glPopMatrix();
 
-    glTranslatef(1.2, 0, 0);
+    glPushMatrix();
+    glRotatef(180, 0, 0, 1);
+    glTranslatef(0, 0.1, 0);
+    draw_wing();
+    glPopMatrix();
+
+    glTranslatef(0.6, 0, 0);
     GlUtils::draw_pyramid(Vec3f(0.4, 0.1, 0.1), Vec3f(1.0, 1.0, 0.0));
-    //GlUtils::draw_pyramid(size_ * Vec3f(1.0, 0.1, 0.1), Vec3f(0.2, 0.3, 0.8));
+    // GlUtils::draw_pyramid(Vec3f(1.0, 0.2, 0.2), color_);
     glPopMatrix();
 }

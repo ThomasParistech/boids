@@ -24,6 +24,8 @@ public:
     void draw() const override;
 
 private:
+    void draw_wing() const;
+
     float last_t_;
 
     Vec3f color_;
