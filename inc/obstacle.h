@@ -14,7 +14,7 @@
 class Obstacle : public MovingObject
 {
 public:
-    Obstacle(const Vec3f &position, int radius = 1);
+    Obstacle(const Vec3f &position, float radius);
 
     virtual ~Obstacle() = default;
 
@@ -27,7 +27,9 @@ public:
     static float obstacle_factor_;
 
 private:
-    int radius_;
+    float radius_;
+
+    float rad_max_;
 };
 
 #endif // Obstacle_H
