@@ -21,7 +21,7 @@
 
 const float FOVY = 60.0f;
 const float NEARCLIP = 0.1f;
-const float FARCLIP = 100.0f;
+const float FARCLIP = 150.0f;
 const int FPS = 30;
 const int WINDOW_X = 700;
 const int WINDOW_Y = 100;
@@ -43,11 +43,11 @@ int crt_target_id_ = 0;
 
 std::vector<Obstacle> obstacles_;
 
-float omega_ball_ = 0.2f;
+int boids_number_ = 1000;
 
 void add_boid()
 {
-    int scale = 15;
+    int scale = 1;
 
     float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -56,8 +56,7 @@ void add_boid()
     float u = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float v = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     float w = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-    // boids_.emplace_back(scale * Vec3f(x, y, z), 0.1 * Vec3f(u, v, w));
-    boids_.emplace_back(scale * Vec3f(x, y, z), Vec3f(0, 0, 0));
+    boids_.emplace_back(scale * Vec3f(x, y, z), 0.1 * Vec3f(u, v, w));
 }
 
 void init(void)
@@ -76,7 +75,7 @@ void init(void)
     // Init camera
     camera.init({0.0f, 0.0f, 0.0f}, 30.0f);
 
-    for (int j = 0; j < 1000; j++)
+    for (int j = 0; j < boids_number_; j++)
         add_boid();
 
     const int scale = 3;
@@ -93,8 +92,6 @@ void init(void)
     for (double j : {-7, -6, -5, -4, -3, 0, 3, 4, 5, 6, 7})
         for (double k : {-1, 0, 1})
             obstacles_.emplace_back(scale * Vec3f(0, j, k), scale);
-
-    // obstacles_.emplace_back(square_size_ * Vec3f(0.5, 0.5, 0), 3);
 }
 
 void display()
@@ -105,7 +102,8 @@ void display()
     ImGui_ImplGLUT_NewFrame();
 
     ImGui::Begin("Test");
-    ImGui::SliderFloat("Neighbor Dist", &MovingObject::neighborhood_max_dist_, 0.0f, 12.f);
+    ImGui::SliderInt("Number of boids", &boids_number_, 0, 2000);
+    ImGui::SliderFloat("Neighbor Distance", &MovingObject::neighborhood_max_dist_, 0.0f, 12.f);
     ImGui::SliderFloat("Separation", &MovingObject::separation_factor_, 0.0f, 0.1f);
     ImGui::SliderFloat("Cohesion", &MovingObject::cohesion_factor_, 0.0f, 0.1f);
     ImGui::SliderFloat("Alignment", &MovingObject::alignment_factor_, 0.0f, 0.02f);
@@ -115,8 +113,6 @@ void display()
     ImGui::SliderFloat("Randomness", &MovingObject::randomness_, 0.0f, 2.f);
     ImGui::SliderFloat("Max speed", &MovingObject::max_speed_, 0.0f, 20.f);
     ImGui::SliderFloat("Min cos angle", &MovingObject::min_cos_angle_, -1.f, 1.f);
-
-    ImGui::SliderFloat("Ball speed", &omega_ball_, 0.0f, 3.f);
 
     ImGui::End();
 
@@ -157,11 +153,26 @@ void processKeys(unsigned char key, int x, int y)
         crt_target_ = &targets_[crt_target_id_];
     }
     else if (key == 'n')
+    {
+        boids_number_++;
         add_boid();
+    }
 }
 
 void systemEvolution()
 {
+    if (boids_number_ != boids_.size())
+    {
+        if (boids_number_ < boids_.size())
+            boids_.erase(boids_.begin() + boids_number_, boids_.end());
+        else
+        {
+            const int n_new_boids = boids_number_ - boids_.size();
+            for (size_t i = 0; i < n_new_boids; i++)
+                add_boid();
+        }
+    }
+
     for (auto &boid_1 : boids_)
         for (auto &boid_2 : boids_)
             if (boid_1.get_id() != boid_2.get_id())
@@ -179,8 +190,6 @@ void systemEvolution()
     const float t = (float)glutGet(GLUT_ELAPSED_TIME) * 0.001;
     for (auto &boid : boids_)
         boid.update(t);
-
-    // target_->update(t);
 }
 
 void mouseButton(int button, int state, int x, int y)
