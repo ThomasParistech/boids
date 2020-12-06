@@ -26,6 +26,8 @@ public:
 private:
     float last_t_;
 
+    Vec3f color_;
+
     int n_neighbors_;
     Vec3f avg_position_;    // Cohesion
     Vec3f avg_speed_;       // Alignment
