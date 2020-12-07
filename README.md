@@ -34,7 +34,7 @@ Go to the build directory and run the app
 bin/main
 ```
 
-![](./images/birds_spirals2.gif)
+![](./images/spiral8.gif)
 
 ## 3 - Flocking behavior
 
@@ -42,7 +42,8 @@ Alignment rule:
 ![](./images/alignment.gif)
 
 Cohesion rule:
-![](./images/cohesion.gif)
+![](./images/cohesion_very_short.gif)
 
 Object attirance/avoidance rule:
-![](./images/magnet.gif)
+![](./images/holecross2.gif)
+![](./images/hole_boid.gif)
